@@ -17,7 +17,7 @@ If you use our code or data in your research, please cite:
 
 ```
 @misc{eckert2025slicer
-	author  = {Eckert, Lucas},
+	author  = {Eckert, Lucas and Wepner, Saskia and Schuppler, Barbara},
 	title   = {Slicer – A Tool for Efficient Stimuli Extraction from Large Speech Corpora},
 	year    = 2025,
 	publisher = {GitHub},
