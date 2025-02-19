@@ -1,6 +1,0 @@
-application==1.0
-pytest==7.4.0
-sounddevice==0.4.6
-subcommand==0.1
-TextGrid==1.6.1
-traitlets==5.14.3
