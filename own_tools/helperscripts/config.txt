@@ -1,0 +1,53 @@
+% Simple config file for the use within readFromTextGrid. 
+% To look for eg multiple labels in multiple SpeakerIDs just seperate them with empty space.
+% To look in every conversation, type: all
+
+TextGridPath = C:/Users/Lucas Eckert/Desktop/Documenti/Graz/TI-Projekt/stateofgrass/GRASS
+SoundFilePath = C:/Users/Lucas Eckert/Nextcloud/GRASS_audio_lang
+
+% extract Audio? (yes/no)
+ExtractAudio = yes
+AudioOutputPath = C:/TI_projekt_daten/Audio
+
+% extract Obsidian file (yes/no)
+ExtractObsidian = no
+ObsidianVaultPath = C:\Users\Lucas Eckert\Desktop\Documenti\ObsidianVault\Graz\Toni-Projekt\extract
+MarkdownFileName = Versuch_2.md
+
+% extract Excel table? (yes/no)
+ExtractExcel = yes
+ExcelPath = own_tools/extract
+ExcelFileName = Versuch4.xlsx
+
+% extract single files (yes/no)
+ExtractSingleFiles = no
+
+% specify encoding for reading of TextGrid
+encoding = UTF-8
+
+% enter talks you want to spy on (eg 015M017M or all)
+SpeakerID = all
+
+% possible tier names:
+% ortho
+% sentence-FA
+% uttID
+% tokenID
+% word-FA
+% word-pron-FA
+% phone
+% utt-pron-FA
+% word
+% stress
+% boundary
+% IPU
+% PCOMP
+
+tier = ortho
+labels = äh ähm ahm
+secondtier = PCOMP
+% note that in the second tier, no labels are looked for, but it's just cut at the same start and end points as the tier
+
+
+% specify how much time you want to extract before and after the label
+deltatime = 4
