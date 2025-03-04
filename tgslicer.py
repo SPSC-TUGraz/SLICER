@@ -111,6 +111,9 @@ class Slicer:
         self.time_index_count = {}
         self.savetimes_frames = {}
 
+        # add chosen channel for multichannel wav
+        self.chosen_channel = 0
+
         # show min and max of wav and tg
         self.mintimelabel = Label(self.startendtime_frame,text='min: 0')
         self.mintimelabel.grid(column=2,row=3, sticky='e')
@@ -182,14 +185,14 @@ class Slicer:
 
         # add checkbox for spectrogram
         self.spec_check = BooleanVar()
-        Checkbutton(self.button_frame, text="Show Spectrogram", variable=self.spec_check).grid(column=1,row=1)
+        Checkbutton(self.button_frame, text="Show Spectrogram", variable=self.spec_check,command=self.refresh_fig).grid(column=1,row=1)
 
         # # add button for export
         # Button(self.exp_button_frame, text="Export...", command=self.export_window).grid(column=1,row=0)
 
         # init Figure Window
         self.fig_height = StringVar(value='4')
-        self.fig_width = StringVar(value='12')
+        self.fig_width = StringVar(value='10')
         self.figsize_frame = Frame(self.mainframe,relief="groove")
         self.figsize_frame.grid(column=4,row=5,sticky="nsew")
         self.figsize_frame.grid_columnconfigure(0, weight=1)
@@ -554,7 +557,8 @@ class Slicer:
                         'saved_endtime': {},
                         'saved_name': {},
                         'saved_export': {},
-                        'time_index_count': {}
+                        'time_index_count': {},
+                        'chosen_channel': self.chosen_channel
                         }
             for index in self.cutout_starttime:
                 savedict['cut_index_count'][index] = self.cut_index_count[index]
@@ -623,6 +627,9 @@ class Slicer:
             self.saved_export = {}
             self.time_index_count = {}
             self.time_count = 0
+
+            # chosen channel for multichannel wav
+            self.chosen_channel = 0
             
             if not workspace_path:
                 return
@@ -678,8 +685,15 @@ class Slicer:
                 except:
                     # print("could not load saved times")
                     pass
+                try:
+                    self.chosen_channel = savedict['chosen_channel']
+                except:
+                    self.chosen_channel = 0
             self.wavlabel.config(text=textwrap.fill(self.file_path,width=30))
             self.sample_rate, self.audio_data = wavfile.read(self.file_path)
+            # if multichannel wav, take chosen channel
+            if len(self.audio_data.shape) > 1:
+                self.audio_data = self.audio_data[:,self.chosen_channel]
             self.audio_data_plot = np.array(self.audio_data, copy=True)
             self.tg = textgrid.TextGrid.fromFile(self.tg_file_path)
             # self.tg_plot = textgrid.TextGrid.fromFile(self.tg_file_path)
@@ -1139,7 +1153,8 @@ class Slicer:
         start_time = float(self.starttime.get())
         end_time = float(self.endtime.get())
         start_sample = int(max(0, self.sample_rate * start_time))
-        end_sample = int(min(self.sample_rate * end_time, len(self.audio_data)))
+        audio_length = self.audio_data.shape[0]
+        end_sample = int(min(self.sample_rate * end_time, audio_length))
         # play_audio = self.audio_data[start_sample:end_sample]
         play_audio = np.array(self.audio_slice, copy=True)
         for index, variable in sorted(self.cutout_starttime.items(), key=lambda x: float(x[1].get()), reverse=True):
@@ -1177,20 +1192,40 @@ class Slicer:
         except:
             pass
 
+    def choose_channel(self):
+        self.chosen_channel = self.channel_var.get()
+        self.channel_dialog.destroy()
+        self.channel_dialog.update()
+
     def choose_wav_file(self):
-        self.file_path = filedialog.askopenfilename()
-        if self.file_path is not None:
-            self.wavlabel.config(text=textwrap.fill(self.file_path,width=30))
-            self.sample_rate, self.audio_data = wavfile.read(self.file_path)
-            self.audio_data_plot = np.array(self.audio_data, copy=True)
-            if self.tg_file_path is not None:
-                if self.starttime.get() == '':
-                    self.starttime.set(str(self.tg.minTime))
-                if self.endtime.get() == '':
-                    self.endtime.set(str(min(float(self.tg.maxTime),float(self.tg.minTime)+10)))
-                self.refresh_fig()
-        else:
-            self.wavlabel.config(text="No file.")
+        try:
+            self.file_path = filedialog.askopenfilename()
+            if self.file_path is not None:
+                self.sample_rate, self.audio_data = wavfile.read(self.file_path)
+                if self.audio_data.ndim > 1:
+                    # open dialog to choose channel
+                    self.channel_dialog = Toplevel(self.mainframe)
+                    self.channel_dialog.title("Choose channel to use")
+                    Label(self.channel_dialog, text="Only mono supported. Choose the channel to use:").grid(row=0,column=0)
+                    self.channel_var = IntVar()
+                    for i in range(self.audio_data.shape[1]):
+                        Radiobutton(self.channel_dialog, text=f"Channel {i+1}", variable=self.channel_var, value=i).grid(row=i+1,column=0)
+                    # add ok button and close window
+                    Button(self.channel_dialog, text="OK", command=self.choose_channel).grid(row=i+2,column=0)
+                    self.audio_data = self.audio_data[:,self.chosen_channel]
+                self.wavlabel.config(text=textwrap.fill(self.file_path,width=30))
+                self.audio_data_plot = np.array(self.audio_data, copy=True)
+                if self.tg_file_path is not None:
+                    if self.starttime.get() == '':
+                        self.starttime.set(str(self.tg.minTime))
+                    if self.endtime.get() == '':
+                        self.endtime.set(str(min(float(self.tg.maxTime),float(self.tg.minTime)+10)))
+                    self.refresh_fig()
+                
+            else:
+                self.wavlabel.config(text="No file.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
         
 
     def add_cutout(self,index=None):
@@ -1228,10 +1263,10 @@ class Slicer:
         # check if to add noise
         Checkbutton(frame,text='Add noise', variable=self.noise_check_list[index]).grid(column=0,row=3)
         # enter SNR value
-        Label(frame,text='SNR [dB]:').grid(column=1,row=3,sticky='w')
-        Entry(frame,textvariable=self.SNR[index],width=3).grid(column=1,row=3,sticky='e')
+        Label(frame,text='SNR [dB]:').grid(column=2,row=3,sticky='e')
+        Entry(frame,textvariable=self.SNR[index],width=3).grid(column=1,row=3,sticky='w')
         # check if pause should be applied
-        Checkbutton(frame,text='Apply', variable=self.apply_check_list[index]).grid(column=2,row=1)
+        Checkbutton(frame,text='Apply', variable=self.apply_check_list[index],command=self.refresh_fig).grid(column=2,row=1)
         # check if to only manipulate the current tier
         # self.current_tier[index] = BooleanVar()
         # Checkbutton(frame,text='only for current tier', variable=self.current_tier[index]).grid(column=1,row=3)
@@ -1239,9 +1274,10 @@ class Slicer:
         # check if gain manipulation in front or back
         Checkbutton(frame,text='Decay to cut',variable=self.front_gain_check_list[index]).grid(column=0,row=4)
         Entry(frame,textvariable=self.front_gain_samples[index],width=5).grid(column=1,row=4,sticky='w')
-        Label(frame,text='[samples]').grid(column=1,row=4,sticky='e')
-        Checkbutton(frame,text='Attack from cut',variable=self.back_gain_check_list[index]).grid(column=2,row=4)
-        Entry(frame,textvariable=self.back_gain_samples[index],width=5).grid(column=3,row=4,sticky='w')
+        Label(frame,text='[samples]').grid(column=2,row=4,sticky='e')
+        Checkbutton(frame,text='Attack from cut',variable=self.back_gain_check_list[index]).grid(column=0,row=5)
+        Entry(frame,textvariable=self.back_gain_samples[index],width=5).grid(column=1,row=5,sticky='w')
+        Label(frame,text='[samples]').grid(column=2,row=5,sticky='e')
         
         # append current frame to dict
         self.cutout_frames[index] = frame
@@ -1254,10 +1290,12 @@ class Slicer:
 
     def set_pause_zero(self,index):
         self.pause_length[index].set(str(0))
+        self.refresh_fig()
 
     def set_pause_whole(self,index):
         wholespan = float(self.cutout_endtime[index].get()) - float(self.cutout_starttime[index].get())
         self.pause_length[index].set(str(wholespan))
+        self.refresh_fig()
 
     def set_export_start_zero(self):
         self.exp_start.set('0')
@@ -1314,13 +1352,13 @@ class Slicer:
             widget.destroy()
         if self.loadflag == 1:
             for item in self.items:
-                checkbox = Checkbutton(self.checkbox_inner_frame, text=textwrap.wrap(item,width=30,placeholder=" [...]")[0], variable=self.tier_check_list[item])
+                checkbox = Checkbutton(self.checkbox_inner_frame, text=textwrap.wrap(item,width=30,placeholder=" [...]")[0], variable=self.tier_check_list[item],command=self.refresh_fig)
                 checkbox.grid(sticky=W)
         else:
             self.tier_check_list = {}
             for item in self.items:
                 self.tier_check_list[item] = BooleanVar()
-                checkbox = Checkbutton(self.checkbox_inner_frame, text=item, variable=self.tier_check_list[item])
+                checkbox = Checkbutton(self.checkbox_inner_frame, text=item, variable=self.tier_check_list[item],command=self.refresh_fig)
                 checkbox.grid(sticky=W)
         self.checkbox_frame.update_idletasks()
         self.checkbox_canvas.config(scrollregion=self.checkbox_canvas.bbox("all"))
@@ -1367,5 +1405,6 @@ if __name__ == '__main__':
     root.protocol("WM_DELETE_WINDOW", on_closing)
     try:
         root.mainloop()
-    except:
+    except Exception as e:
+        print(f"An error occurred: {e}")
         pass
