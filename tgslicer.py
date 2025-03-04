@@ -817,67 +817,70 @@ class Slicer:
 
             # export options frame
             exp_options_frame = Frame(exp_dialog)
-            exp_options_frame.grid(column=1,row=3,sticky='nsew',columnspan=2)
+            exp_options_frame.grid(column=0,row=3,sticky='nsew',columnspan=3)
 
             # checkbox if output should be normalized
             self.normalize_export = BooleanVar(value=True)
-            Checkbutton(exp_options_frame, text="Normalize export", variable=self.normalize_export).grid(column=0,row=0)
+            Checkbutton(exp_options_frame, text="Normalize export", variable=self.normalize_export).grid(column=0,row=0,sticky="w")
             
             # Normalization from to
-            Label(exp_options_frame,text='Time span around frame to normalize from (in sec):').grid(column=0,row=4)
+            Label(exp_options_frame,text='Time span around frame to normalize from (in sec):').grid(column=0,row=1,sticky="w")
             # self.norm_start = StringVar(value=self.starttime.get())
             # self.norm_end = StringVar(value=self.endtime.get())
             self.norm_span = StringVar(value="10")
-            Entry(exp_options_frame,textvariable=self.norm_span).grid(column=1,row=4)
+            Entry(exp_options_frame,textvariable=self.norm_span).grid(column=1,row=1)
             # Entry(exp_options_frame,textvariable=self.norm_start).grid(column=1,row=4)
             # Entry(exp_options_frame,textvariable=self.norm_end).grid(column=2,row=4)
 
             # checkbox for different sample rate
             self.resample_check = BooleanVar()
-            Checkbutton(exp_options_frame, text="Samplerate", variable=self.resample_check).grid(column=1,row=0)
+            Checkbutton(exp_options_frame, text="Samplerate", variable=self.resample_check).grid(column=0,row=2,sticky="w")
             self.resample_rate = StringVar(value=str(self.sample_rate))
-            Entry(exp_options_frame,textvariable=self.resample_rate).grid(column=2,row=0)
+            Entry(exp_options_frame,textvariable=self.resample_rate).grid(column=1,row=2)
 
             # dropdown menu for data type
+            Label(exp_options_frame, text="Data type: ").grid(column=0,row=3,sticky="w")
             self.data_types = ['int8', 'int16', 'int32', 'int64',
                                'uint8', 'uint16', 'uint32', 'uint64',
                                'float32', 'float64']
             self.sel_data_type = StringVar(value=str(self.audio_data.dtype))
-            Combobox(exp_options_frame,textvariable=self.sel_data_type,values=self.data_types).grid(column=3,row=0)
+            Combobox(exp_options_frame,textvariable=self.sel_data_type,values=self.data_types).grid(column=1,row=3)
 
             # start and end values of export
-            Label(exp_options_frame, text="Start and end of the frame: ").grid(column=0,row=1)
+            Label(exp_options_frame, text="Start of frame: ").grid(column=0,row=4,sticky="w")
             self.exp_start = StringVar(value=self.starttime.get())
             self.exp_start_entry = Entry(exp_options_frame, textvariable=self.exp_start)
-            self.exp_start_entry.grid(column=1,row=1)
-            Button(exp_options_frame,text='0',command=self.set_export_start_zero,width=4).grid(column=2,row=1)
+            self.exp_start_entry.grid(column=1,row=4)
+            Button(exp_options_frame,text='0',command=self.set_export_start_zero,width=4).grid(column=2,row=4)
+            Button(exp_options_frame,text='current',command=self.set_export_start_times).grid(column=3,row=4)
+            Label(exp_options_frame, text="End of frame: ").grid(column=0,row=5,sticky="w")
             self.exp_end = StringVar(value=self.endtime.get())
             self.exp_end_entry = Entry(exp_options_frame, textvariable=self.exp_end)
-            self.exp_end_entry.grid(column=3,row=1)
-            Button(exp_options_frame,text='end',command=self.set_export_end_total,width=4).grid(column=4,row=1)
-            Button(exp_options_frame,text='<->',command=self.set_export_times,width=4).grid(column=5,row=1)
+            self.exp_end_entry.grid(column=1,row=5)
+            Button(exp_options_frame,text='end',command=self.set_export_end_total,width=4).grid(column=2,row=5)
+            Button(exp_options_frame,text='current',command=self.set_export_end_times).grid(column=3,row=5)
             
             # start the export with the original time values or at 0
-            Label(exp_options_frame, text="Write time to textgrid starting with: ").grid(column=0,row=2)
+            Label(exp_options_frame, text="Write time to textgrid starting with: ").grid(column=0,row=7,sticky="w")
             self.exp_time_start = StringVar(value='0')
             self.exp_time_entry = Entry(exp_options_frame, textvariable=self.exp_time_start)
-            self.exp_time_entry.grid(column=1,row=2)
-            Button(exp_options_frame,text='0',command=self.set_exp_zero,width=4).grid(column=2,row=2,sticky='w')
-            Button(exp_options_frame,text='frame',command= self.set_exp_now,width=5).grid(column=2,row=2,sticky='e')
+            self.exp_time_entry.grid(column=1,row=7)
+            Button(exp_options_frame,text='0',command=self.set_exp_zero,width=4).grid(column=2,row=7,sticky='w')
+            Button(exp_options_frame,text='current',command= self.set_exp_now).grid(column=3,row=7)
 
             # insert cut in and cut out checkboxes
-            Label(exp_options_frame, text="Fade in (samples):").grid(column=0,row=3)
+            Label(exp_options_frame, text="Fade in (samples):").grid(column=0,row=8,sticky="w")
             self.fade_in = StringVar(value='0')
-            Entry(exp_options_frame, textvariable=self.fade_in).grid(column=1,row=3)
-            Label(exp_options_frame, text="Fade out (samples):").grid(column=2,row=3)
+            Entry(exp_options_frame, textvariable=self.fade_in).grid(column=1,row=8)
+            Label(exp_options_frame, text="Fade out (samples):").grid(column=0,row=9,sticky="w")
             self.fade_out = StringVar(value='0')
-            Entry(exp_options_frame, textvariable=self.fade_out).grid(column=3,row=3)
+            Entry(exp_options_frame, textvariable=self.fade_out).grid(column=1,row=9)
 
             # insert export all function
-            Button(exp_options_frame,text='Export all checked starttimes', command=lambda tg=self.tg: self.export_all(tg=tg)).grid(column=1,row=5)
+            Button(exp_options_frame,text='Export all checked starttimes', command=lambda tg=self.tg, mode='all': self.export_button(mode=mode,tg=tg)).grid(column=0,row=10)
             
             # insert export button
-            Button(exp_options_frame,text='Export Files',command=lambda tg=self.tg: self.export_files(tg=tg)).grid(column=0,row=5)
+            Button(exp_options_frame,text='Export current time frame',command=lambda tg=self.tg, mode='current': self.export_button(mode=mode,tg=tg)).grid(column=1,row=10)
         except ValueError:
             pass
 
@@ -903,6 +906,14 @@ class Slicer:
         self.exp_name.delete(0,END)
         self.exp_name.insert(0,name_def)
 
+    def export_button(self, mode, tg):
+        if mode == 'all':
+            self.export_all(tg=tg)
+            messagebox.showinfo("Export success", "All checked frames have been exported.")
+        elif mode == 'current':
+            self.export_files(tg=tg)
+            messagebox.showinfo("Export success", "Current frame has been exported.")
+        
     def export_files(self, tg):
         start_time = float(self.exp_start.get())
         start_sample = int(max(0, self.sample_rate * start_time))
@@ -1266,7 +1277,7 @@ class Slicer:
         Label(frame,text='SNR [dB]:').grid(column=2,row=3,sticky='e')
         Entry(frame,textvariable=self.SNR[index],width=3).grid(column=1,row=3,sticky='w')
         # check if pause should be applied
-        Checkbutton(frame,text='Apply', variable=self.apply_check_list[index],command=self.refresh_fig).grid(column=2,row=1)
+        Checkbutton(frame,text='Apply', variable=self.apply_check_list[index],command=self.apply_cutout).grid(column=2,row=1)
         # check if to only manipulate the current tier
         # self.current_tier[index] = BooleanVar()
         # Checkbutton(frame,text='only for current tier', variable=self.current_tier[index]).grid(column=1,row=3)
@@ -1303,8 +1314,10 @@ class Slicer:
     def set_export_end_total(self):
         self.exp_end.set(str(self.tg.maxTime))
     
-    def set_export_times(self):
+    def set_export_start_times(self):
         self.exp_start.set(self.starttime.get())
+        
+    def set_export_end_times(self):
         self.exp_end.set(self.endtime.get())
 
     def remove_cutout(self, index):
