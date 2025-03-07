@@ -23,6 +23,7 @@ setuptools.setup(
         "numpy",
         "scipy",
         "sounddevice",
+        "soundfile",
         "textgrid",
         "tkinter-tooltip"
     ]

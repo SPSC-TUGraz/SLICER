@@ -25,6 +25,8 @@ from matplotlib.backends.backend_tkagg import (
 import pickle
 import re
 import webbrowser
+import soundfile as sf
+# from pydub import AudioSegment
 
 class Slicer:
     def __init__(self, root):    
@@ -876,12 +878,23 @@ class Slicer:
             self.fade_out = StringVar(value='0')
             Entry(exp_options_frame, textvariable=self.fade_out).grid(column=1,row=9)
 
+            # choose annotation file extension TextGrid or stg
+            Label(exp_options_frame, text="Annotation file extension: ").grid(column=0,row=10,sticky="w")
+            self.exp_ext = StringVar(value='.TextGrid')
+            Combobox(exp_options_frame,textvariable=self.exp_ext,values=['.TextGrid','.stg']).grid(column=1,row=10)
+
+            # choose output format
+            Label(exp_options_frame, text="Output format: ").grid(column=0,row=11,sticky="w")
+            self.exp_format = StringVar(value='wav')
+            Combobox(exp_options_frame,textvariable=self.exp_format,values=['wav','flac']).grid(column=1,row=11)
+
             # insert export all function
-            Button(exp_options_frame,text='Export all checked starttimes', command=lambda tg=self.tg, mode='all': self.export_button(mode=mode,tg=tg)).grid(column=0,row=10)
+            Button(exp_options_frame,text='Export all checked starttimes', command=lambda tg=self.tg, mode='all': self.export_button(mode=mode,tg=tg)).grid(column=0,row=12)
             
             # insert export button
-            Button(exp_options_frame,text='Export current time frame',command=lambda tg=self.tg, mode='current': self.export_button(mode=mode,tg=tg)).grid(column=1,row=10)
-        except ValueError:
+            Button(exp_options_frame,text='Export current time frame',command=lambda tg=self.tg, mode='current': self.export_button(mode=mode,tg=tg)).grid(column=1,row=12)
+        except Exception as e:
+            print(e)
             pass
 
     def export_all(self,tg):
@@ -970,7 +983,33 @@ class Slicer:
         if int(self.fade_out.get()) > 0:
             gainrange = np.flip(np.arange(0,int(self.fade_out.get())).astype(float)/float(self.fade_out.get()))
             exp_audioslice[-int(self.fade_out.get()):] = gainrange*exp_audioslice[-int(self.fade_out.get()):]
-        wavfile.write(exp_name_wav,fs_exp,exp_audioslice.astype(np.dtype(self.sel_data_type.get())))
+
+        # write audio
+        if self.exp_format.get() == 'wav':
+            wavfile.write(exp_name_wav,fs_exp,exp_audioslice.astype(np.dtype(self.sel_data_type.get())))
+        elif self.exp_format.get() == 'flac':
+            sf.write(file=exp_name + '.flac',data=exp_audioslice.astype(np.dtype(self.sel_data_type.get())),samplerate=fs_exp)
+        # elif self.exp_format.get() == 'mp3':
+        #     if self.sel_data_type.get() == 'int16':
+        #         sample_width = 2
+        #     elif self.sel_data_type.get() == 'int8':
+        #         sample_width = 1
+        #     elif self.sel_data_type.get() == 'int32':
+        #         sample_width = 4
+        #     else:
+        #         messagebox.showinfo("Data type not supported", f"Data type {self.sel_data_type.get()} is not supported for mp3 export. Data will be converted to int16.")
+        #         sample_width = 2
+        #         exp_audioslice = exp_audioslice.astype(np.int16)
+                
+        #     audio_segment = AudioSegment(
+        #         exp_audioslice.tobytes(),
+        #         frame_rate=fs_exp,
+        #         sample_width=sample_width,
+        #         channels=1
+        #     )
+        #     audio_segment.export(exp_name + '.mp3', format='mp3')
+
+        # write textgrid
         tg_exp = textgrid.TextGrid(name=exp_name)
         
         self.exp_time_end = StringVar(value=str(float(self.exp_time_start.get()) + float(self.exp_end.get()) - float(self.exp_start.get())))
@@ -1008,7 +1047,7 @@ class Slicer:
                             self.rest_length = self.cut_end - self.pause_end
                             tier_exp = self.manipulate_tier(tier_exp)
                 tg_exp.append(tier_exp)
-        exp_name_tg = exp_name + '.TextGrid'
+        exp_name_tg = exp_name + self.exp_ext.get()
         tg_exp.write(exp_name_tg)
 
     def manipulate_tier(self,tier):
@@ -1048,6 +1087,11 @@ class Slicer:
                 self.cut_start = float(self.cutout_starttime[index].get())
                 self.cut_end = float(self.cutout_endtime[index].get())
                 pause_length = float(self.pause_length[index].get())
+                max_pause_length = self.cut_end - self.cut_start
+                if pause_length > max_pause_length:
+                    pause_length = max_pause_length
+                    self.pause_length[index].set(str(pause_length))
+                    messagebox.showinfo("Pause length too long", f"Pause length for cutout {index} was too long and was set to the maximum possible value.")
                 self.pause_end = self.cut_start + pause_length
                 self.rest_length = self.cut_end - self.pause_end
                 # manipulate audio
@@ -1332,7 +1376,7 @@ class Slicer:
         self.cutout_canvas.config(scrollregion=self.cutout_canvas.bbox("all"))
 
     def choose_textgrid_file(self):
-        self.tg_file_path = filedialog.askopenfilename()
+        self.tg_file_path = filedialog.askopenfilename(filetypes=[("Textgrid files", ".TextGrid .textgrid .stg")])
         if self.tg_file_path is not None:
             self.tg = textgrid.TextGrid.fromFile(self.tg_file_path)
             # self.tg_plot = textgrid.TextGrid.fromFile(self.tg_file_path)

@@ -2,5 +2,6 @@ matplotlib
 numpy
 scipy
 sounddevice
+soundfile
 textgrid
 tkinter-tooltip
