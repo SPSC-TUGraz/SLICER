@@ -87,7 +87,7 @@ class Slicer:
         self.timesave_frame.grid(column=2,row=3,rowspan=2, sticky="nsew")
         self.timesave_frame.grid_rowconfigure(0, weight=1)
         self.timesave_frame.grid_columnconfigure(0, weight=1)
-        Label(self.timesave_frame,text="Selected time frames").grid(column=0,row=0)
+        Label(self.timesave_frame,text="Filed slices").grid(column=0,row=0)
         self.timesave_canvas = Canvas(self.timesave_frame,width=150,height=150)
         self.timesave_canvas.grid(column=0,row=1, sticky="nsew")
         self.timesave_canvas.grid_rowconfigure(0, weight=1)
@@ -826,7 +826,7 @@ class Slicer:
             Checkbutton(exp_options_frame, text="Normalize export", variable=self.normalize_export).grid(column=0,row=0,sticky="w")
             
             # Normalization from to
-            Label(exp_options_frame,text='Time span around frame to normalize from (in sec):').grid(column=0,row=1,sticky="w")
+            Label(exp_options_frame,text='Time span around slice to normalize from (in sec):').grid(column=0,row=1,sticky="w")
             # self.norm_start = StringVar(value=self.starttime.get())
             # self.norm_end = StringVar(value=self.endtime.get())
             self.norm_span = StringVar(value="10")
@@ -889,10 +889,10 @@ class Slicer:
             Combobox(exp_options_frame,textvariable=self.exp_format,values=['wav','flac']).grid(column=1,row=11)
 
             # insert export all function
-            Button(exp_options_frame,text='Export all checked starttimes', command=lambda tg=self.tg, mode='all': self.export_button(mode=mode,tg=tg)).grid(column=0,row=12)
+            Button(exp_options_frame,text='Export all checked slices', command=lambda tg=self.tg, mode='all': self.export_button(mode=mode,tg=tg)).grid(column=0,row=12)
             
             # insert export button
-            Button(exp_options_frame,text='Export current time frame',command=lambda tg=self.tg, mode='current': self.export_button(mode=mode,tg=tg)).grid(column=1,row=12)
+            Button(exp_options_frame,text='Export current slice',command=lambda tg=self.tg, mode='current': self.export_button(mode=mode,tg=tg)).grid(column=1,row=12)
         except Exception as e:
             print(e)
             pass
