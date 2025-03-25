@@ -831,9 +831,7 @@ class Slicer:
             # self.norm_end = StringVar(value=self.endtime.get())
             self.norm_span = StringVar(value="10")
             Entry(exp_options_frame,textvariable=self.norm_span).grid(column=1,row=1)
-            # Entry(exp_options_frame,textvariable=self.norm_start).grid(column=1,row=4)
-            # Entry(exp_options_frame,textvariable=self.norm_end).grid(column=2,row=4)
-
+        
             # checkbox for different sample rate
             self.resample_check = BooleanVar()
             Checkbutton(exp_options_frame, text="Samplerate", variable=self.resample_check).grid(column=0,row=2,sticky="w")
@@ -989,25 +987,6 @@ class Slicer:
             wavfile.write(exp_name_wav,fs_exp,exp_audioslice.astype(np.dtype(self.sel_data_type.get())))
         elif self.exp_format.get() == 'flac':
             sf.write(file=exp_name + '.flac',data=exp_audioslice.astype(np.dtype(self.sel_data_type.get())),samplerate=fs_exp)
-        # elif self.exp_format.get() == 'mp3':
-        #     if self.sel_data_type.get() == 'int16':
-        #         sample_width = 2
-        #     elif self.sel_data_type.get() == 'int8':
-        #         sample_width = 1
-        #     elif self.sel_data_type.get() == 'int32':
-        #         sample_width = 4
-        #     else:
-        #         messagebox.showinfo("Data type not supported", f"Data type {self.sel_data_type.get()} is not supported for mp3 export. Data will be converted to int16.")
-        #         sample_width = 2
-        #         exp_audioslice = exp_audioslice.astype(np.int16)
-                
-        #     audio_segment = AudioSegment(
-        #         exp_audioslice.tobytes(),
-        #         frame_rate=fs_exp,
-        #         sample_width=sample_width,
-        #         channels=1
-        #     )
-        #     audio_segment.export(exp_name + '.mp3', format='mp3')
 
         # write textgrid
         tg_exp = textgrid.TextGrid(name=exp_name)
